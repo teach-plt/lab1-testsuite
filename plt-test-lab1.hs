@@ -21,9 +21,6 @@ import Data.IORef
 import qualified Data.List as List
 import Data.Maybe
 
-import GHC.Paths
-  ( ghc )
-
 import System.Console.GetOpt
 import System.Directory
   ( copyFile
@@ -39,8 +36,19 @@ import System.IO
 import System.Process
 import System.IO.Unsafe
 
+
 -- * Configuration
 ------------------------------------------------------------------------
+
+-- 2024-11-02, Andreas: Unfortunately, GHC.Paths.ghc does not always point
+-- to the right GHC.  It points to where GHC was when it itself was compiled.
+-- GHC could have been moved in the meantime, e.g. reinstalled in a different
+-- location.
+-- See: https://github.com/simonmar/ghc-paths/issues/4
+-- import GHC.Paths ( ghc )
+
+ghc :: FilePath
+ghc = "ghc"
 
 -- | Default good tests if no tests (neither good nor bad) are given on command line.
 defaultGood :: [FilePath]

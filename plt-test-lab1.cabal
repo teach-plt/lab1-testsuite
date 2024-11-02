@@ -44,7 +44,7 @@ executable plt-test-lab1
     , directory  >= 1.3.1.5  && < 1.4
     , filepath   >= 1.4.2    && < 1.6
     , process    >= 1.6.3.0  && < 1.7
-    , ghc-paths ^>= 0.1.0.12
+    -- , ghc-paths ^>= 0.1.0.12  -- not reliable
 
   -- These following tools are not needed to _build_ the testsuite runner,
   -- but to _run_ it, namely to build the parser from the given LBNF file.

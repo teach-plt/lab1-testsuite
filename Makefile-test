@@ -1,8 +1,0 @@
-.PHONY : all
-
-HC_OPTS = -threaded
-
-all : plt-test-lab1
-
-plt-test-lab1 : plt-test-lab1.hs
-	ghc --make $(HC_OPTS) -cpp -DHC_OPTS="\"$(HC_OPTS)\"" $< -o $@

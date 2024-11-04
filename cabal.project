@@ -3,3 +3,5 @@
 -- All rights reserved.
 
 packages: .
+
+write-ghc-environment-files: always

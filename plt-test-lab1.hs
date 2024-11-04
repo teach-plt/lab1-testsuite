@@ -65,6 +65,10 @@ defaultBad = ["bad"]
 doDebug :: IORef Bool
 doDebug = unsafePerformIO $ newIORef False
 
+{-# NOINLINE doExtra #-}
+doExtra :: IORef Bool
+doExtra = unsafePerformIO $ newIORef False
+
 -- | Print debug message if debug is set to @True@.
 debug :: String -> IO ()
 debug s = do
@@ -164,6 +168,7 @@ data Options = Options
   { optDebug :: Bool        -- ^ Print debug information?
   , optGood  :: [FilePath]  -- ^ Good tests.
   , optBad   :: [FilePath]  -- ^ Bad tests.
+  , extraFlag :: Bool
   }
 
 defaultOptions :: Options
@@ -171,6 +176,7 @@ defaultOptions = Options
   { optDebug = False
   , optGood  = []
   , optBad   = []
+  , extraFlag = True
   }
 
 optDescr :: [OptDescr (Options -> Options)]
@@ -178,10 +184,14 @@ optDescr =
   [ Option []    ["debug"] (NoArg  enableDebug       ) "print debug messages"
   , Option ['g'] ["good"]  (ReqArg addGood     "PATH") "good test case PATH"
   , Option ['b'] ["bad"]   (ReqArg addBad      "PATH") "bad test case PATH"
+  , Option []    ["no-extra"] (NoArg disableExtra    ) "skip MoreTests"
   ]
 
 enableDebug :: Options -> Options
 enableDebug o = o { optDebug = True }
+
+disableExtra :: Options -> Options
+disableExtra options = options { extraFlag = False }
 
 addGood, addBad :: FilePath -> Options -> Options
 addGood f o = o { optGood = f : optGood o }
@@ -202,6 +212,7 @@ parseArgs argv = case getOpt RequireOrder optDescr argv of
     when (optDebug options) $ writeIORef doDebug True
     let expandPath f = doesDirectoryExist f >>= \b -> if b then listCCFiles f else return [f]
     testSuite' <- bothM ((concat <$>) . mapM expandPath) $ testSuiteOption options
+    when (extraFlag options) $ writeIORef doExtra True
     return (cfFile, testSuite')
 
   (_,_,_) -> do
@@ -246,6 +257,8 @@ mainOpts cfFile testSuite = do
   -- We change into the working directory.
   -- Files of the testsuite with a relative name need to be updated by "../".
   setCurrentDirectory dir
+  -- If we have position date in our tokens then the MoreTests tests do not work :(
+  runPrgNoFail_ "sed" ["-i.bak", "-e", "s/position token/token/g"] $ grammar <.> "cf"
   let adjustPath f = if isRelative f then ".." </> f else f
       testSuite'   = (map adjustPath *** map adjustPath) testSuite
 
@@ -272,6 +285,26 @@ mainOpts cfFile testSuite = do
   putStrLn "------------------------------------------------------------"
   report "Good programs: " good
   report "Bad programs:  " bad
+
+  -- To be merged with standard test suite
+  e <- readIORef doExtra
+  when e $ do
+    putStr "Running additional tests... "
+    copyFile (".." </> "MoreTests.hs") "MoreTests.hs"
+    runPrgNoFail_ "sed" ["-i.bak", "-e", "s/GRAMMAR/" ++ grammar ++ "/g"] "MoreTests.hs"
+
+    -- Run MoreTests via cabal rather than ghc (Andreas, 2022-11-21).
+    -- This makes sure that the HUnit package is found.
+    copyFile (".." </> "plt-test-lab1.cabal") "plt-test-lab1.cabal"
+    callProcess "cabal" ["exec", "--", "runghc", "MoreTests.hs"]
+
+-- #ifdef HC_OPTS
+--     callProcess "ghc" $ ["--make"] ++ words HC_OPTS ++ ["-o", "MoreTests", "MoreTests.hs"]
+-- #else
+--     callProcess "ghc" ["--make", "-o", "MoreTests", "MoreTests.hs"]
+-- #endif
+--     callProcess ("." </> "MoreTests") []
+    putStrLn "."
 
 main :: IO ()
 main = setup >> getArgs >>= parseArgs >>= uncurry mainOpts

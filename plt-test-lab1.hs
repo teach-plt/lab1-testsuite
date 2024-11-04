@@ -293,10 +293,11 @@ mainOpts cfFile testSuite = do
     copyFile (".." </> "MoreTests.hs") "MoreTests.hs"
     runPrgNoFail_ "sed" ["-i.bak", "-e", "s/GRAMMAR/" ++ grammar ++ "/g"] "MoreTests.hs"
 
-    -- Run MoreTests via cabal rather than ghc (Andreas, 2022-11-21).
+    -- Run MoreTests via Stack rather than ghc (Andreas, 2022-11-21, 2024-11-04).
     -- This makes sure that the HUnit package is found.
     copyFile (".." </> "plt-test-lab1.cabal") "plt-test-lab1.cabal"
-    callProcess "cabal" ["exec", "--", "runghc", "MoreTests.hs"]
+    copyFile (".." </> "stack.yaml") "stack.yaml"
+    callProcess "stack" ["exec", "runghc", "--", "MoreTests.hs"]
 
 -- #ifdef HC_OPTS
 --     callProcess "ghc" $ ["--make"] ++ words HC_OPTS ++ ["-o", "MoreTests", "MoreTests.hs"]

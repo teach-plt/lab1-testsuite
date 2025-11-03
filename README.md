@@ -10,8 +10,8 @@ Prerequisites
 
 To run this testsuite, recent versions of the following Haskell tools need to be installed.
 
-- [Haskell Stack](https://docs.haskellstack.org/en/stable/), e.g. version 3.1.1
-- [GHC](https://www.haskell.org/ghc/) version 9.4.8
+- [Haskell Stack](https://docs.haskellstack.org/en/stable/), e.g. version 3.7.1
+- [GHC](https://www.haskell.org/ghc/) version 9.6.7
 - [BNFC](https://bnfc.digitalgrammars.com/), e.g. version 2.9.5
 - [Alex](https://haskell-alex.readthedocs.io/en/stable/)
 - [Happy](https://haskell-happy.readthedocs.io/en/stable/)
@@ -38,7 +38,7 @@ First install [GHCup](https://www.haskell.org/ghcup/).
 Then use it to install Stack and GHC.
 ```
 ghcup install stack latest
-ghcup install ghc 9.4.8
+ghcup install ghc 9.6.7
 ```
 If needed, add to your system `PATH` the location where GHCup installs tools.
 

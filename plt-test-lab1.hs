@@ -259,19 +259,30 @@ mainOpts cfFile testSuite = do
   compileDriver
 
   -- Run the wrapper program on the tests.
-  (good,bad) <- runTests testSuite'
+  (good :: [(FilePath, Bool)], bad :: [(FilePath, Bool)]) <- runTests testSuite'
 
   -- Report the results.
+  let separator = putStrLn "------------------------------------------------------------"
+  let conflicts = unless (null msgs) $ do
+        mapM_ (putStrLn . color blue) msgs
+        putStrLn $ unwords
+          [ "See", joinPath [dir, grammar, "Par.info"], "for information about the conflicts" ]
+
   putStrLn ""
-  putStrLn "------------------------------------------------------------"
+  separator
   putStrLn $ color (if rules > 150 then red else black) $ "Number of rules:         " ++ show rules
-  unless (null msgs) $ do
-    mapM_ (putStrLn . color blue) msgs
-    putStrLn $ "See " ++ joinPath [dir, grammar, "Par.info"]
-               ++ " for information about the conflicts"
-  putStrLn "------------------------------------------------------------"
-  report "Good programs: " good
-  report "Bad programs:  " bad
+  conflicts
+  separator
+  report True "Good programs: " good
+  report True "Bad programs:  " bad
+
+  -- Repeat summary in case it scrolled out
+  separator
+  conflicts
+  report False "Good programs: " good
+  report False "Bad programs:  " bad
+
+
 
 main :: IO ()
 main = setup >> getArgs >>= parseArgs >>= uncurry mainOpts
@@ -414,15 +425,16 @@ rightAlign :: Int -> String -> String
 rightAlign w s = replicate (w - length s) ' ' ++ s
 
 -- | Report how many tests passed and which tests failed (if any).
-report :: String -> [(FilePath,Bool)] -> IO ()
-report n rs = do
+report :: Bool -> String -> [(FilePath,Bool)] -> IO ()
+report verbose n rs = do
   let (passedTests,failedTests) = List.partition snd rs
       (p,t) = (length passedTests, length rs)
       successful = p == t
       c = if successful then green else red
-  putStrLn $ color c $
+  when (verbose || not successful) $ do
+    putStrLn $ color c $
            n ++ "passed " ++ show p ++ " of " ++ show t ++ " tests"
-  when (not successful) $ do
+  when (verbose && not successful) $ do
     putStrLn $ show (t - p) ++ " tests failed:"
     forM_ failedTests $ \(fp,_) -> putStrLn $ "- " ++ fp
 

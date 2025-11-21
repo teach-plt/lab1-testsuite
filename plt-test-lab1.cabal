@@ -20,6 +20,7 @@ tested-with:
    || ==8.10.7 || ==8.8.4 || ==8.6.5
 
 extra-source-files:
+  MoreTests.hs
   bad/*.cc
   good/*.cc
   good-CMM/*.cc
@@ -47,6 +48,8 @@ executable plt-test-lab1
     , filepath   >= 1.4.2.1  && < 1.6
     , process    >= 1.6.5.0  && < 1.7
     -- , ghc-paths ^>= 0.1.0.12  -- not reliable
+    -- Extra dependency for MoreTests.hs
+    , HUnit       >= 1.6.0  && < 1.7
 
   -- These following tools are not needed to _build_ the testsuite runner,
   -- but to _run_ it, namely to build the parser from the given LBNF file.
